@@ -197,7 +197,7 @@ const BudgetCalculator = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Interactive Budget Calculator</h1>
+      <h1 className="text-2xl font-bold mb-4">Budget Calculator</h1>
       <div className="mb-4 flex space-x-2">
         <Button onClick={handleAddRole} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Role
