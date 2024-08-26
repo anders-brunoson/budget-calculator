@@ -1,8 +1,5 @@
-# React + Vite
+# Simple monthly budget calculator 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Built together with Claude.ai.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Thanks to [@Bklieger](https://github.com/Bklieger) for offering a nice tutorial on how to get Claude React artifacts running through [Claude-React-Jumpstart](https://github.com/Bklieger/Claude-React-Jumpstart). Worked like a charm.
