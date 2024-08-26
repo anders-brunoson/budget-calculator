@@ -65,25 +65,36 @@ const BudgetCalculator = () => {
     calculateBudget();
   }, [commitments, hourlyRates, roles, workingDays, months]);
 
-  const calculateBudget = () => {
-    const newBudget = {};
-    let grandTotal = 0;
+const calculateBudget = () => {
+  const newBudget = {};
+  let grandTotal = 0;
+  const grandTotalBreakdown = {};
+  const grandTotalHours = {};
 
-    months.forEach(month => {
-      newBudget[month] = { total: 0, breakdown: {}, hours: {} };
-      roles.forEach(role => {
-        const hours = Math.round((workingDays[month] || 21) * 7.5 * (commitments[role.id]?.[month] || 0) / 100);
-        const amount = hours * (hourlyRates[role.id] || 0);
-        newBudget[month].breakdown[role.id] = amount;
-        newBudget[month].hours[role.id] = hours;
-        newBudget[month].total += amount;
-      });
-      grandTotal += newBudget[month].total;
+  months.forEach(month => {
+    newBudget[month] = { total: 0, breakdown: {}, hours: {} };
+    roles.forEach(role => {
+      const hours = Math.round((workingDays[month] || 21) * 7.5 * (commitments[role.id]?.[month] || 0) / 100);
+      const amount = hours * (hourlyRates[role.id] || 0);
+      newBudget[month].breakdown[role.id] = amount;
+      newBudget[month].hours[role.id] = hours;
+      newBudget[month].total += amount;
+
+      // Update grandTotal breakdown and hours
+      grandTotalBreakdown[role.id] = (grandTotalBreakdown[role.id] || 0) + amount;
+      grandTotalHours[role.id] = (grandTotalHours[role.id] || 0) + hours;
     });
+    grandTotal += newBudget[month].total;
+  });
 
-    newBudget.total = { total: grandTotal };
-    setBudget(newBudget);
+  newBudget.total = { 
+    total: grandTotal, 
+    breakdown: grandTotalBreakdown,
+    hours: grandTotalHours
   };
+  
+  setBudget(newBudget);
+};
 
   const handleCommitmentChange = (roleId, month, value) => {
     const monthsToUpdate = selectedMonths.length > 0 ? selectedMonths : [month];
