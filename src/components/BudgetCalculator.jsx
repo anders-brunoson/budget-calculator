@@ -8,7 +8,7 @@ import { PlusCircle, X, GripVertical } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const BudgetCalculator = () => {
-  const [months, setMonths] = useState(['september', 'october', 'november']);
+  const [months, setMonths] = useState(['jan', 'feb', 'mar',`apr`,'may', 'jun', 'jul',`aug`,'sep', 'oct', 'nov',`dec`]);
   const [roles, setRoles] = useState([
     { id: '1', name: 'Systems Developer' },
     { id: '2', name: 'Project Manager' },
@@ -195,15 +195,25 @@ const BudgetCalculator = () => {
     setDraggedItem(null);
   };
 
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Budget Calculator</h1>
+      <h1 className="text-2xl font-bold mb-4">Monthly Budget Calculator</h1>
       <div className="mb-4 flex space-x-2">
         <Button onClick={handleAddRole} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Role
         </Button>
         <Button onClick={handleAddMonth} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Month
+        </Button>
+        <Button 
+          onClick={() => handleRemoveMonth(activeTab)} 
+          variant="destructive"
+          className="flex items-center"
+          disabled={months.length <= 1}
+        >
+          <X className="mr-2 h-4 w-4" /> Remove Month
         </Button>
       </div>
       {isAddingMonth && (
@@ -228,17 +238,25 @@ const BudgetCalculator = () => {
           </label>
         ))}
       </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          {months.map(month => (
-            <TabsTrigger key={month} value={month} className="capitalize">{month}</TabsTrigger>
-          ))}
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="mb-6 bg-gray-100 p-1 rounded-t-lg">
+          <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
+            {months.map(month => (
+              <TabsTrigger 
+                key={month} 
+                value={month} 
+                className="px-4 py-2 border-b-2 border-transparent hover:border-gray-300 focus:outline-none focus:border-blue-500"
+              >
+                {capitalize(month)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
         {months.map(month => (
           <TabsContent key={month} value={month}>
-            <div className="mb-4 flex justify-between items-center">
+            <div className="mt-8 mb-8 flex justify-between items-center">
               <label className="block text-sm font-medium text-gray-700">
-                Working days in {month}:
+                Working days in {capitalize(month)} (CHECK MANUALLY!):
                 <Input
                   type="number"
                   value={workingDays[month] || 0}
@@ -248,7 +266,6 @@ const BudgetCalculator = () => {
                   max="31"
                 />
               </label>
-              <Button onClick={() => handleRemoveMonth(month)} variant="destructive">Remove Month</Button>
             </div>
             <div className="space-y-4 mb-6">
               {roles.map((role, index) => (
