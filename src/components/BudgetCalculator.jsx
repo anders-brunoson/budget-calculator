@@ -4,8 +4,9 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X, GripVertical } from 'lucide-react';
+import { PlusCircle, X, GripVertical, Moon, Sun } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 
 const BudgetCalculator = () => {
   const [months, setMonths] = useState(['jan', 'feb', 'mar',`apr`,'may', 'jun', 'jul',`aug`,'sep', 'oct', 'nov',`dec`]);
@@ -24,6 +25,7 @@ const BudgetCalculator = () => {
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [activeTab, setActiveTab] = useState('');
   const [draggedItem, setDraggedItem] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     initializeState();
@@ -34,6 +36,10 @@ const BudgetCalculator = () => {
       setActiveTab(months[0]);
     }
   }, [months, activeTab]);
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', darkMode);
+  }, [darkMode]);
 
   const initializeState = () => {
     const initialCommitments = {};
@@ -197,9 +203,25 @@ const BudgetCalculator = () => {
 
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Monthly Budget Calculator</h1>
+    <div className={`p-4 max-w-4xl mx-auto ${darkMode ? 'dark' : ''}`}>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Monthly Budget Calculator</h1>
+        <div className="flex items-center space-x-2">
+          <Sun className="h-4 w-4" />
+          <Switch
+            checked={darkMode}
+            onCheckedChange={toggleDarkMode}
+            aria-label="Toggle dark mode"
+          />
+          <Moon className="h-4 w-4" />
+        </div>
+      </div>
+      
       <div className="mb-4 flex space-x-2">
         <Button onClick={handleAddRole} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Role
@@ -216,6 +238,7 @@ const BudgetCalculator = () => {
           <X className="mr-2 h-4 w-4" /> Remove Month
         </Button>
       </div>
+
       {isAddingMonth && (
         <div className="mb-4 flex space-x-2">
           <Input
@@ -255,7 +278,7 @@ const BudgetCalculator = () => {
         {months.map(month => (
           <TabsContent key={month} value={month}>
             <div className="mt-8 mb-8 flex justify-between items-center">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium">
                 Working days in {capitalize(month)} (CHECK MANUALLY!):
                 <Input
                   type="number"
@@ -271,7 +294,7 @@ const BudgetCalculator = () => {
               {roles.map((role, index) => (
                 <div
                   key={role.id}
-                  className="p-4 border rounded-lg relative bg-white"
+                  className="p-4 border rounded-lg relative"
                   draggable
                   onDragStart={(e) => onDragStart(e, index)}
                   onDragOver={() => onDragOver(index)}
