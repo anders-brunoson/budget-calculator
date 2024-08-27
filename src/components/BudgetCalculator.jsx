@@ -167,33 +167,38 @@ const BudgetCalculator = () => {
     }
   };
 
-  const handleRemoveMonth = (monthToRemove) => {
-    if (months.length > 1) {
-      setMonths(prev => {
-        const updatedMonths = prev.filter(month => month !== monthToRemove);
-        setActiveTab(updatedMonths[0]);
-        return updatedMonths;
-      });
+  const handleRemoveMonth = () => {
+    if (months.length > 1 && selectedMonths.length > 0) {
+      setMonths(prev => prev.filter(month => !selectedMonths.includes(month)));
       setWorkingDays(prev => {
-        const { [monthToRemove]: _, ...rest } = prev;
-        return rest;
+        const newWorkingDays = { ...prev };
+        selectedMonths.forEach(month => {
+          delete newWorkingDays[month];
+        });
+        return newWorkingDays;
       });
       setCommitments(prev => {
         const newCommitments = { ...prev };
         Object.keys(newCommitments).forEach(roleId => {
-          const { [monthToRemove]: _, ...rest } = newCommitments[roleId];
-          newCommitments[roleId] = rest;
+          selectedMonths.forEach(month => {
+            delete newCommitments[roleId][month];
+          });
         });
         return newCommitments;
       });
-      setSelectedMonths(prev => prev.filter(month => month !== monthToRemove));
+      setSelectedMonths([]);
+      setActiveTab(months.find(month => !selectedMonths.includes(month)) || months[0]);
     }
   };
 
-  const handleMonthSelect = (month) => {
-    setSelectedMonths(prev =>
-      prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
-    );
+  const handleMonthSelect = (month, event) => {
+    if (event.ctrlKey || event.metaKey) {
+      setSelectedMonths(prev => 
+        prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
+      );
+    } else {
+      setSelectedMonths([month]);
+    }
   };
 
   const handleDownloadCSV = () => {
@@ -242,12 +247,13 @@ const BudgetCalculator = () => {
         <ol className="list-decimal list-inside space-y-2">
           <li>Add or remove roles using the "Add Role" and "X" buttons.</li>
           <li>Add or remove months using the "Add Month" and "Remove Month" buttons.</li>
-          <li>Select multiple months to apply commitment level changes across them.</li>
+          <li>Ctrl/command + click to select multiple months to apply commitment level changes across them.</li>
           <li>Verify the number of working days for each month.</li>
           <li>Set the commitment percentage and hourly rate for each role.</li>
           <li>Drag and drop roles to reorder them.</li>
           <li>Use the dark mode toggle for different viewing options.</li>
           <li>View the calculated budget breakdown for each month and the total.</li>
+          <li>Download budget data as CSV to use with Excel.</li>
         </ol>
       </DialogDescription>
     </DialogContent>
@@ -317,12 +323,12 @@ const BudgetCalculator = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> Add Month
         </Button>
         <Button 
-          onClick={() => handleRemoveMonth(activeTab)} 
+          onClick={handleRemoveMonth} 
           variant="destructive"
           className="flex items-center"
-          disabled={months.length <= 1}
+          disabled={months.length <= 1 || selectedMonths.length === 0}
         >
-          <X className="mr-2 h-4 w-4" /> Remove Month
+          <X className="mr-2 h-4 w-4" /> Remove Month(s)
         </Button>
         <Button onClick={handleDownloadCSV} className="flex items-center">
           <Download className="mr-2 h-4 w-4" /> Download CSV
@@ -340,31 +346,31 @@ const BudgetCalculator = () => {
           <Button onClick={() => setIsAddingMonth(false)} variant="outline">Cancel</Button>
         </div>
       )}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {months.map(month => (
-          <label key={month} className="flex items-center space-x-1">
-            <Checkbox
-              checked={selectedMonths.includes(month)}
-              onCheckedChange={() => handleMonthSelect(month)}
-            />
-            <span className="capitalize">{month}</span>
-          </label>
-        ))}
-      </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-6 bg-gray-100 p-1 rounded-lg">
+
+      <Tabs className="w-full">
+        <div className="mb-6 bg-gray-100 p-1 rounded-lg flex flex-wrap min-h-fit">
           <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
             {months.map(month => (
               <TabsTrigger 
                 key={month} 
                 value={month} 
-                className="px-1 py-1 border-b-2 border-transparent hover:border-gray-300 focus:outline-none focus:border-blue-500"
+                onClick={(e) => handleMonthSelect(month, e)}
+                className={`px-1 py-1 border-b-2 ${
+                  selectedMonths.includes(month) 
+                    ? 'border-blue-500 bg-blue-100' 
+                    : 'border-transparent hover:border-gray-300'
+                } focus:outline-none`}
               >
                 {capitalize(month)}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
+        <div className="mt-4 text-left">
+          <h3 className="font-semibold">Selected Month(s):</h3>
+          <p>{selectedMonths.map(capitalize).join(', ') || 'None'}</p>
+        </div>
+
         {months.map(month => (
           <TabsContent key={month} value={month}>
             <div className="mt-8 mb-8 flex justify-between items-center">
