@@ -65,36 +65,36 @@ const BudgetCalculator = () => {
     calculateBudget();
   }, [commitments, hourlyRates, roles, workingDays, months]);
 
-const calculateBudget = () => {
-  const newBudget = {};
-  let grandTotal = 0;
-  const grandTotalBreakdown = {};
-  const grandTotalHours = {};
+  const calculateBudget = () => {
+    const newBudget = {};
+    let grandTotal = 0;
+    const grandTotalBreakdown = {};
+    const grandTotalHours = {};
 
-  months.forEach(month => {
-    newBudget[month] = { total: 0, breakdown: {}, hours: {} };
-    roles.forEach(role => {
-      const hours = Math.round((workingDays[month] || 21) * 7.5 * (commitments[role.id]?.[month] || 0) / 100);
-      const amount = hours * (hourlyRates[role.id] || 0);
-      newBudget[month].breakdown[role.id] = amount;
-      newBudget[month].hours[role.id] = hours;
-      newBudget[month].total += amount;
+    months.forEach(month => {
+      newBudget[month] = { total: 0, breakdown: {}, hours: {} };
+      roles.forEach(role => {
+        const hours = Math.round((workingDays[month] || 21) * 7.5 * (commitments[role.id]?.[month] || 0) / 100);
+        const amount = hours * (hourlyRates[role.id] || 0);
+        newBudget[month].breakdown[role.id] = amount;
+        newBudget[month].hours[role.id] = hours;
+        newBudget[month].total += amount;
 
-      // Update grandTotal breakdown and hours
-      grandTotalBreakdown[role.id] = (grandTotalBreakdown[role.id] || 0) + amount;
-      grandTotalHours[role.id] = (grandTotalHours[role.id] || 0) + hours;
+        // Update grandTotal breakdown and hours
+        grandTotalBreakdown[role.id] = (grandTotalBreakdown[role.id] || 0) + amount;
+        grandTotalHours[role.id] = (grandTotalHours[role.id] || 0) + hours;
+      });
+      grandTotal += newBudget[month].total;
     });
-    grandTotal += newBudget[month].total;
-  });
 
-  newBudget.total = { 
-    total: grandTotal, 
-    breakdown: grandTotalBreakdown,
-    hours: grandTotalHours
+    newBudget.total = { 
+      total: grandTotal, 
+      breakdown: grandTotalBreakdown,
+      hours: grandTotalHours
+    };
+    
+    setBudget(newBudget);
   };
-  
-  setBudget(newBudget);
-};
 
   const handleCommitmentChange = (roleId, month, value) => {
     const monthsToUpdate = selectedMonths.length > 0 ? selectedMonths : [month];
@@ -263,7 +263,7 @@ const calculateBudget = () => {
       )}
       <div className="mb-4 flex flex-wrap gap-2">
         {months.map(month => (
-          <label key={month} className="flex items-center space-x-2">
+          <label key={month} className="flex items-center space-x-1">
             <Checkbox
               checked={selectedMonths.includes(month)}
               onCheckedChange={() => handleMonthSelect(month)}
@@ -273,13 +273,13 @@ const calculateBudget = () => {
         ))}
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-6 bg-gray-100 p-1 rounded-t-lg">
+        <div className="mb-6 bg-gray-100 p-1 rounded-lg">
           <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
             {months.map(month => (
               <TabsTrigger 
                 key={month} 
                 value={month} 
-                className="px-4 py-2 border-b-2 border-transparent hover:border-gray-300 focus:outline-none focus:border-blue-500"
+                className="px-1 py-1 border-b-2 border-transparent hover:border-gray-300 focus:outline-none focus:border-blue-500"
               >
                 {capitalize(month)}
               </TabsTrigger>
