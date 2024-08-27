@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X, GripVertical, Moon, Sun, Info } from 'lucide-react';
+import { PlusCircle, X, GripVertical, Moon, Sun, Info, Download } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -196,6 +196,11 @@ const BudgetCalculator = () => {
     );
   };
 
+  const handleDownloadCSV = () => {
+    const csvContent = generateCSV(budget, roles, months, commitments, hourlyRates, workingDays);
+    downloadCSV(csvContent);
+  };
+
   const onDragStart = (e, index) => {
     setDraggedItem(roles[index]);
     e.dataTransfer.effectAllowed = "move";
@@ -249,6 +254,38 @@ const BudgetCalculator = () => {
   </Dialog>
 );
 
+  const generateCSV = (budget, roles, months, commitments, hourlyRates, workingDays) => {
+    let csvContent = "month;role;commitmentLevel;hourlyRate;hours;amount\n";
+
+    months.forEach(month => {
+      roles.forEach(role => {
+        const commitment = commitments[role.id]?.[month] || 0;
+        const hourlyRate = hourlyRates[role.id] || 0;
+        const days = workingDays[month] || 21;
+        const hours = Math.round(days * 7.5 * commitment / 100);
+        const amount = budget[month]?.breakdown?.[role.id] || 0;
+
+        csvContent += `"${month}";"${role.name}";"${commitment}";"${hourlyRate}";"${hours}";"${amount}"\n`;
+      });
+    });
+
+    return csvContent;
+  };
+
+  const downloadCSV = (csvContent) => {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "budget_data.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className={`p-4 max-w-4xl mx-auto ${darkMode ? 'dark' : ''}`}>
       <div className="flex justify-between items-center mb-6">
@@ -272,7 +309,7 @@ const BudgetCalculator = () => {
         </div>
       </div>
       
-      <div className="mb-4 flex space-x-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Button onClick={handleAddRole} className="flex items-center">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Role
         </Button>
@@ -286,6 +323,9 @@ const BudgetCalculator = () => {
           disabled={months.length <= 1}
         >
           <X className="mr-2 h-4 w-4" /> Remove Month
+        </Button>
+        <Button onClick={handleDownloadCSV} className="flex items-center">
+          <Download className="mr-2 h-4 w-4" /> Download CSV
         </Button>
       </div>
 
