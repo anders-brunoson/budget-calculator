@@ -197,9 +197,19 @@ const BudgetCalculator = () => {
         prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
       );
     } else {
-      setSelectedMonths([month]);
+      setSelectedMonths(prev => 
+        prev.length === 1 && prev[0] === month ? [] : [month]
+      );
     }
   };
+
+  useEffect(() => {
+    if (selectedMonths.length > 0) {
+      setActiveTab(selectedMonths[selectedMonths.length - 1]);
+    } else {
+      setActiveTab('');
+    }
+  }, [selectedMonths]);  
 
   const handleDownloadCSV = () => {
     const csvContent = generateCSV(budget, roles, months, commitments, hourlyRates, workingDays);
@@ -347,7 +357,7 @@ const BudgetCalculator = () => {
         </div>
       )}
 
-      <Tabs className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="mb-6 bg-gray-100 p-1 rounded-lg flex flex-wrap min-h-fit">
           <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
             {months.map(month => (
@@ -371,75 +381,86 @@ const BudgetCalculator = () => {
           <p>{selectedMonths.map(capitalize).join(', ') || 'None'}</p>
         </div>
 
-        {months.map(month => (
-          <TabsContent key={month} value={month}>
-            <div className="mt-8 mb-8 flex justify-between items-center">
-              <label className="block text-sm font-medium">
-                Working days in {capitalize(month)} (CHECK MANUALLY!):
-                <Input
-                  type="number"
-                  value={workingDays[month] || 0}
-                  onChange={(e) => handleWorkingDaysChange(month, e.target.value)}
-                  className="mt-1 block w-full"
-                  min="0"
-                  max="31"
-                />
-              </label>
-            </div>
-            <div className="space-y-4 mb-6">
-              {roles.map((role, index) => (
-                <div
-                  key={role.id}
-                  className="p-4 border rounded-lg relative"
-                  draggable
-                  onDragStart={(e) => onDragStart(e, index)}
-                  onDragOver={() => onDragOver(index)}
-                  onDragEnd={onDragEnd}
-                >
-                  <div className="flex items-center mb-2">
-                    <div className="mr-2 cursor-move">
-                      <GripVertical className="h-5 w-5 text-gray-400" />
-                    </div>
+        {selectedMonths.length > 0 && (
+          <>
+            {months.map(month => (
+              <TabsContent key={month} value={month}>
+                <div className="mt-8 mb-8 flex justify-between items-center">
+                  <label className="block text-sm font-medium">
+                    Working days in {capitalize(month)} (CHECK MANUALLY!):
                     <Input
-                      value={role.name}
-                      onChange={(e) => setRoles(prev => prev.map(r => r.id === role.id ? { ...r, name: e.target.value } : r))}
-                      className="font-medium flex-grow"
+                      type="number"
+                      value={workingDays[month] || 0}
+                      onChange={(e) => handleWorkingDaysChange(month, e.target.value)}
+                      className="mt-1 block w-full"
+                      min="0"
+                      max="31"
                     />
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="ml-2" 
-                      onClick={() => handleRemoveRole(role.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <div className="text-left flex-grow">
-                      <span className="text-sm">Commitment: {commitments[role.id]?.[month] || 0}%</span>
-                      <Slider
-                        value={[commitments[role.id]?.[month] || 0]}
-                        max={100}
-                        step={1}
-                        onValueChange={(val) => handleCommitmentChange(role.id, month, val)}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <span className="text-sm">Hourly Rate (SEK)</span>
-                      <Input
-                        type="number"
-                        value={hourlyRates[role.id] || 0}
-                        onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
+                  </label>
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-        ))}
+                <div className="space-y-4 mb-6">
+                  {roles.map((role, index) => (
+                    <div
+                      key={role.id}
+                      className="p-4 border rounded-lg relative"
+                      draggable
+                      onDragStart={(e) => onDragStart(e, index)}
+                      onDragOver={() => onDragOver(index)}
+                      onDragEnd={onDragEnd}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="mr-2 cursor-move">
+                          <GripVertical className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          value={role.name}
+                          onChange={(e) => setRoles(prev => prev.map(r => r.id === role.id ? { ...r, name: e.target.value } : r))}
+                          className="font-medium flex-grow"
+                        />
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="ml-2" 
+                          onClick={() => handleRemoveRole(role.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center space-x-4 mt-2">
+                        <div className="text-left flex-grow">
+                          <span className="text-sm">Commitment: {commitments[role.id]?.[month] || 0}%</span>
+                          <Slider
+                            value={[commitments[role.id]?.[month] || 0]}
+                            max={100}
+                            step={1}
+                            onValueChange={(val) => handleCommitmentChange(role.id, month, val)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <span className="text-sm">Hourly Rate (SEK)</span>
+                          <Input
+                            type="number"
+                            value={hourlyRates[role.id] || 0}
+                            onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            ))}
+          </>
+        )}
       </Tabs>
+
+      {selectedMonths.length === 0 && (
+        <div className="mt-8 text-center text-gray-500">
+          <p>Please select a month to view and edit budget details.</p>
+        </div>
+      )}
+      
       <div className="space-y-4 mt-6">
         {Object.entries(budget).map(([period, { total, breakdown, hours }]) => (
           <Card key={period}>
