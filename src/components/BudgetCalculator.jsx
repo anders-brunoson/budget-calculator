@@ -4,9 +4,17 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X, GripVertical, Moon, Sun } from 'lucide-react';
+import { PlusCircle, X, GripVertical, Moon, Sun, Info } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const BudgetCalculator = () => {
   const [months, setMonths] = useState(['jan', 'feb', 'mar',`apr`,'may', 'jun', 'jul',`aug`,'sep', 'oct', 'nov',`dec`]);
@@ -26,6 +34,7 @@ const BudgetCalculator = () => {
   const [activeTab, setActiveTab] = useState('');
   const [draggedItem, setDraggedItem] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     initializeState();
@@ -218,11 +227,41 @@ const BudgetCalculator = () => {
     setDarkMode(!darkMode);
   };
 
+  const InfoModal = () => (
+  <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>How to Use the Budget Calculator</DialogTitle>
+      </DialogHeader>
+      <DialogDescription>
+        <ol className="list-decimal list-inside space-y-2">
+          <li>Add or remove roles using the "Add Role" and "X" buttons.</li>
+          <li>Add or remove months using the "Add Month" and "Remove Month" buttons.</li>
+          <li>Select multiple months to apply commitment level changes across them.</li>
+          <li>Verify the number of working days for each month.</li>
+          <li>Set the commitment percentage and hourly rate for each role.</li>
+          <li>Drag and drop roles to reorder them.</li>
+          <li>Use the dark mode toggle for different viewing options.</li>
+          <li>View the calculated budget breakdown for each month and the total.</li>
+        </ol>
+      </DialogDescription>
+    </DialogContent>
+  </Dialog>
+);
+
   return (
     <div className={`p-4 max-w-4xl mx-auto ${darkMode ? 'dark' : ''}`}>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Monthly Budget Calculator</h1>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsInfoOpen(true)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <Info className="h-5 w-5" />
+          </Button>
           <Sun className="h-4 w-4" />
           <Switch
             checked={darkMode}
@@ -385,6 +424,7 @@ const BudgetCalculator = () => {
           </Card>
         ))}
       </div>
+      <InfoModal />
     </div>
   );
 };
