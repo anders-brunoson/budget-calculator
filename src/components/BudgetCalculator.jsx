@@ -27,6 +27,7 @@ const BudgetCalculator = () => {
   const [commitments, setCommitments] = useState({});
   const [hourlyRates, setHourlyRates] = useState({});
   const [workingDays, setWorkingDays] = useState({});
+  const [workingHours, setWorkingHours] = useState({});
   const [budget, setBudget] = useState({});
   const [newMonthName, setNewMonthName] = useState('');
   const [isAddingMonth, setIsAddingMonth] = useState(false);
@@ -54,10 +55,12 @@ const BudgetCalculator = () => {
     const initialCommitments = {};
     const initialHourlyRates = {};
     const initialWorkingDays = {};
+    const initialWorkingHours = {};
 
     roles.forEach(role => {
       initialCommitments[role.id] = {};
       initialHourlyRates[role.id] = 1000;
+      initialWorkingHours[role.id] = 8;
       months.forEach(month => {
         initialCommitments[role.id][month] = 50;
         initialWorkingDays[month] = 21;
@@ -72,7 +75,7 @@ const BudgetCalculator = () => {
 
   useEffect(() => {
     calculateBudget();
-  }, [commitments, hourlyRates, roles, workingDays, months]);
+  }, [commitments, hourlyRates, roles, workingDays, workingHours, months]);
 
   const calculateBudget = () => {
     const newBudget = {};
@@ -86,14 +89,14 @@ const BudgetCalculator = () => {
       roles.forEach(role => {
         const commitment = commitments[role.id]?.[month] || 0;
         const days = workingDays[month] || 0;
-        const hours = Math.round(days * 7.5 * commitment / 100);
+        const hoursPerDay = workingHours[role.id] || 8;
+        const hours = Math.round(days * hoursPerDay * commitment / 100);
         const amount = hours * (hourlyRates[role.id] || 0);
         newBudget[month].breakdown[role.id] = amount;
         newBudget[month].hours[role.id] = hours;
         newBudget[month].commitments[role.id] = commitment;
         newBudget[month].total += amount;
 
-        // Update grandTotal breakdown, hours, and commitments
         grandTotalBreakdown[role.id] = (grandTotalBreakdown[role.id] || 0) + amount;
         grandTotalHours[role.id] = (grandTotalHours[role.id] || 0) + hours;
         grandTotalCommitments[role.id] = (grandTotalCommitments[role.id] || 0) + commitment;
@@ -101,7 +104,6 @@ const BudgetCalculator = () => {
       grandTotal += newBudget[month].total;
     });
 
-    // Calculate average commitment for grand total
     Object.keys(grandTotalCommitments).forEach(roleId => {
       grandTotalCommitments[roleId] = Math.round(grandTotalCommitments[roleId] / months.length);
     });
@@ -135,6 +137,10 @@ const BudgetCalculator = () => {
     setWorkingDays(prev => ({ ...prev, [month]: parseInt(value) || 0 }));
   };
 
+  const handleWorkingHoursChange = (roleId, value) => {
+    setWorkingHours(prev => ({ ...prev, [roleId]: parseFloat(value) || 0 }));
+  };
+
   const handleAddRole = () => {
     const newId = (roles.length + 1).toString();
     setRoles(prev => [...prev, { id: newId, name: `New Role ${newId}` }]);
@@ -143,6 +149,7 @@ const BudgetCalculator = () => {
       [newId]: months.reduce((acc, month) => ({ ...acc, [month]: 50 }), {})
     }));
     setHourlyRates(prev => ({ ...prev, [newId]: 1000 }));
+    setWorkingHours(prev => ({ ...prev, [newId]: 8 }));
   };
 
   const handleRemoveRole = (idToRemove) => {
@@ -152,6 +159,10 @@ const BudgetCalculator = () => {
       return rest;
     });
     setHourlyRates(prev => {
+      const { [idToRemove]: _, ...rest } = prev;
+      return rest;
+    });
+    setWorkingHours(prev => {
       const { [idToRemove]: _, ...rest } = prev;
       return rest;
     });
@@ -282,17 +293,18 @@ const BudgetCalculator = () => {
 );
 
   const generateCSV = (budget, roles, months, commitments, hourlyRates, workingDays) => {
-    let csvContent = "month;role;commitmentLevel;hourlyRate;hours;amount\n";
+    let csvContent = "month;role;commitmentLevel;hourlyRate;workingHoursPerDay;hours;amount\n";
 
     months.forEach(month => {
       roles.forEach(role => {
         const commitment = commitments[role.id]?.[month] || 0;
         const hourlyRate = hourlyRates[role.id] || 0;
         const days = workingDays[month] || 21;
-        const hours = Math.round(days * 7.5 * commitment / 100);
+        const workingHoursPerDay = workingHours[role.id] || 8; // Updated to use 8 as default
+        const hours = Math.round(days * workingHoursPerDay * commitment / 100);
         const amount = budget[month]?.breakdown?.[role.id] || 0;
 
-        csvContent += `"${month}";"${role.name}";"${commitment}";"${hourlyRate}";"${hours}";"${amount}"\n`;
+        csvContent += `"${month}";"${role.name}";"${commitment}";"${hourlyRate}";"${workingHoursPerDay}";"${hours}";"${amount}"\n`;
       });
     });
 
@@ -454,6 +466,17 @@ const BudgetCalculator = () => {
                             value={hourlyRates[role.id] || 0}
                             onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
                             className="mt-1"
+                          />
+                        </div>
+                        <div className="w-32">
+                          <span className="text-sm">Working Hours/Day</span>
+                          <Input
+                            type="number"
+                            value={workingHours[role.id] || 8}
+                            onChange={(e) => handleWorkingHoursChange(role.id, e.target.value)}
+                            className="mt-1"
+                            step="0.5"
+                            min="0"
                           />
                         </div>
                       </div>
