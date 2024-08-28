@@ -79,27 +79,38 @@ const BudgetCalculator = () => {
     let grandTotal = 0;
     const grandTotalBreakdown = {};
     const grandTotalHours = {};
+    const grandTotalCommitments = {};
 
     months.forEach(month => {
-      newBudget[month] = { total: 0, breakdown: {}, hours: {} };
+      newBudget[month] = { total: 0, breakdown: {}, hours: {}, commitments: {} };
       roles.forEach(role => {
-        const hours = Math.round((workingDays[month] || 21) * 7.5 * (commitments[role.id]?.[month] || 0) / 100);
+        const commitment = commitments[role.id]?.[month] || 0;
+        const days = workingDays[month] || 0;
+        const hours = Math.round(days * 7.5 * commitment / 100);
         const amount = hours * (hourlyRates[role.id] || 0);
         newBudget[month].breakdown[role.id] = amount;
         newBudget[month].hours[role.id] = hours;
+        newBudget[month].commitments[role.id] = commitment;
         newBudget[month].total += amount;
 
-        // Update grandTotal breakdown and hours
+        // Update grandTotal breakdown, hours, and commitments
         grandTotalBreakdown[role.id] = (grandTotalBreakdown[role.id] || 0) + amount;
         grandTotalHours[role.id] = (grandTotalHours[role.id] || 0) + hours;
+        grandTotalCommitments[role.id] = (grandTotalCommitments[role.id] || 0) + commitment;
       });
       grandTotal += newBudget[month].total;
+    });
+
+    // Calculate average commitment for grand total
+    Object.keys(grandTotalCommitments).forEach(roleId => {
+      grandTotalCommitments[roleId] = Math.round(grandTotalCommitments[roleId] / months.length);
     });
 
     newBudget.total = { 
       total: grandTotal, 
       breakdown: grandTotalBreakdown,
-      hours: grandTotalHours
+      hours: grandTotalHours,
+      commitments: grandTotalCommitments
     };
     
     setBudget(newBudget);
@@ -462,7 +473,7 @@ const BudgetCalculator = () => {
       )}
       
       <div className="space-y-4 mt-6">
-        {Object.entries(budget).map(([period, { total, breakdown, hours }]) => (
+        {Object.entries(budget).map(([period, { total, breakdown, hours, commitments }]) => (
           <Card key={period}>
             <CardHeader className="capitalize">
               <div className="flex justify-between items-center">
@@ -470,17 +481,19 @@ const BudgetCalculator = () => {
                 <span className="text-2xl font-bold">{total?.toLocaleString()} SEK</span>
               </div>
             </CardHeader>
-            {breakdown && hours && (
+            {breakdown && hours && commitments && (
               <CardContent>
                 <div className="space-y-2">
                   <div className="grid grid-cols-12 gap-2 text-sm font-medium">
-                    <span className="col-span-6 text-left">Role</span>
+                    <span className="col-span-4 text-left">Role</span>
+                    <span className="col-span-2 text-right">Commitment</span>
                     <span className="col-span-2 text-right">Hours</span>
                     <span className="col-span-4 text-right">Amount</span>
                   </div>
                   {roles.map(role => (
                     <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
-                      <span className="col-span-6 text-left truncate" title={role.name}>{role.name}</span>
+                      <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
+                      <span className="col-span-2 text-right">{commitments[role.id] || 0}%</span>
                       <span className="col-span-2 text-right">{hours[role.id] || 0}</span>
                       <span className="col-span-4 text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
                     </div>
@@ -491,7 +504,9 @@ const BudgetCalculator = () => {
           </Card>
         ))}
       </div>
+
       <InfoModal />
+      
     </div>
   );
 };
