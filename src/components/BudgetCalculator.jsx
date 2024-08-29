@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,8 @@ const BudgetCalculator = () => {
   const [draggedItem, setDraggedItem] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [editingMonth, setEditingMonth] = useState(null);
+  const editInputRef = useRef(null);
 
   useEffect(() => {
     initializeState();
@@ -144,7 +146,7 @@ const BudgetCalculator = () => {
     const parsedValue = value === '' ? '' : parseFloat(value);
     setWorkingHours(prev => ({ ...prev, [roleId]: parsedValue }));
   };
-  
+
   const handleAddRole = () => {
     const newId = (roles.length + 1).toString();
     setRoles(prev => [...prev, { id: newId, name: `New Role ${newId}` }]);
@@ -229,6 +231,37 @@ const BudgetCalculator = () => {
     }
   };
 
+  const handleMonthDoubleClick = (month) => {
+    setEditingMonth(month);
+  };
+
+  const handleMonthNameChange = (oldName, newName) => {
+    if (newName && newName !== oldName && !months.includes(newName.toLowerCase())) {
+      setMonths(prev => prev.map(m => m === oldName ? newName.toLowerCase() : m));
+      setWorkingDays(prev => {
+        const { [oldName]: value, ...rest } = prev;
+        return { ...rest, [newName.toLowerCase()]: value };
+      });
+      setCommitments(prev => {
+        const newCommitments = { ...prev };
+        Object.keys(newCommitments).forEach(roleId => {
+          const { [oldName]: value, ...rest } = newCommitments[roleId];
+          newCommitments[roleId] = { ...rest, [newName.toLowerCase()]: value };
+        });
+        return newCommitments;
+      });
+      setEditingMonth(null);
+    } else {
+      setEditingMonth(null);
+    }
+  };
+
+  useEffect(() => {
+    if (editingMonth && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingMonth]);
+
   useEffect(() => {
     if (selectedMonths.length > 0) {
       setActiveTab(selectedMonths[selectedMonths.length - 1]);
@@ -283,6 +316,7 @@ const BudgetCalculator = () => {
         <ol className="list-decimal list-inside space-y-2">
           <li>Add or remove roles using the "Add Role" and "X" buttons.</li>
           <li>Add or remove months using the "Add Month" and "Remove Month" buttons.</li>
+          <li>Duoble-click month in the tabs section at the top to edit it.</li> 
           <li>Ctrl/command + click to select multiple months to apply commitment level changes across them.</li>
           <li>Verify the number of working days for each month.</li>
           <li>Set the commitment percentage and hourly rate for each role.</li>
@@ -392,13 +426,29 @@ const BudgetCalculator = () => {
                 key={month} 
                 value={month} 
                 onClick={(e) => handleMonthSelect(month, e)}
+                onDoubleClick={() => handleMonthDoubleClick(month)}
                 className={`px-1 py-1 border-b-2 ${
                   selectedMonths.includes(month) 
                     ? 'border-blue-500 bg-blue-100' 
                     : 'border-transparent hover:border-gray-300'
                 } focus:outline-none`}
               >
-                {capitalize(month)}
+                {editingMonth === month ? (
+                  <Input
+                    ref={editInputRef}
+                    defaultValue={capitalize(month)}
+                    onBlur={(e) => handleMonthNameChange(month, e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleMonthNameChange(month, e.target.value);
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-20 p-0 h-6 text-center"
+                  />
+                ) : (
+                  capitalize(month)
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
