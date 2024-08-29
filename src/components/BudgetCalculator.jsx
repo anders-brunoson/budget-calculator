@@ -19,9 +19,11 @@ import {
 const BudgetCalculator = () => {
   const [months, setMonths] = useState(['jan', 'feb', 'mar',`apr`,'may', 'jun', 'jul',`aug`,'sep', 'oct', 'nov',`dec`]);
   const [roles, setRoles] = useState([
-    { id: '1', name: 'Systems Developer' },
-    { id: '2', name: 'Project Manager' },
-    { id: '3', name: 'Content Manager' }
+    { id: '1', name: 'Systems Developer BE' },
+    { id: '2', name: 'Systems Developer FE' },
+    { id: '3', name: 'UX Designer' },
+    { id: '4', name: 'Digital Designer' },
+    { id: '5', name: 'Project Manager' }
   ]);
 
   const [commitments, setCommitments] = useState({});
@@ -60,7 +62,7 @@ const BudgetCalculator = () => {
     roles.forEach(role => {
       initialCommitments[role.id] = {};
       initialHourlyRates[role.id] = 1000;
-      initialWorkingHours[role.id] = 8;
+      initialWorkingHours[role.id] = 8;  // Set default working hours to 8
       months.forEach(month => {
         initialCommitments[role.id][month] = 50;
         initialWorkingDays[month] = 21;
@@ -70,6 +72,7 @@ const BudgetCalculator = () => {
     setCommitments(initialCommitments);
     setHourlyRates(initialHourlyRates);
     setWorkingDays(initialWorkingDays);
+    setWorkingHours(initialWorkingHours);  // Set the initial working hours
     setActiveTab(months[0]);
   };
 
@@ -89,7 +92,7 @@ const BudgetCalculator = () => {
       roles.forEach(role => {
         const commitment = commitments[role.id]?.[month] || 0;
         const days = workingDays[month] || 0;
-        const hoursPerDay = workingHours[role.id] || 8;
+        const hoursPerDay = workingHours[role.id] === '' ? 0 : (workingHours[role.id] ?? 8);
         const hours = Math.round(days * hoursPerDay * commitment / 100);
         const amount = hours * (hourlyRates[role.id] || 0);
         newBudget[month].breakdown[role.id] = amount;
@@ -130,17 +133,18 @@ const BudgetCalculator = () => {
   };
 
   const handleHourlyRateChange = (roleId, value) => {
-    setHourlyRates(prev => ({ ...prev, [roleId]: parseInt(value) || 0 }));
+    setHourlyRates(prev => ({ ...prev, [roleId]: value === '' ? '' : parseInt(value) || 0 }));
   };
 
   const handleWorkingDaysChange = (month, value) => {
-    setWorkingDays(prev => ({ ...prev, [month]: parseInt(value) || 0 }));
+    setWorkingDays(prev => ({ ...prev, [month]: value === '' ? '' : parseInt(value) || 0 }));
   };
 
   const handleWorkingHoursChange = (roleId, value) => {
-    setWorkingHours(prev => ({ ...prev, [roleId]: parseFloat(value) || 0 }));
+    const parsedValue = value === '' ? '' : parseFloat(value);
+    setWorkingHours(prev => ({ ...prev, [roleId]: parsedValue }));
   };
-
+  
   const handleAddRole = () => {
     const newId = (roles.length + 1).toString();
     setRoles(prev => [...prev, { id: newId, name: `New Role ${newId}` }]);
@@ -413,7 +417,7 @@ const BudgetCalculator = () => {
                     Working days in {capitalize(month)} (CHECK MANUALLY!):
                     <Input
                       type="number"
-                      value={workingDays[month] || 0}
+                      value={workingDays[month] ?? ''}
                       onChange={(e) => handleWorkingDaysChange(month, e.target.value)}
                       className="mt-1 block w-full"
                       min="0"
@@ -460,19 +464,19 @@ const BudgetCalculator = () => {
                           />
                         </div>
                         <div className="w-32">
-                          <span className="text-sm">Hourly Rate (SEK)</span>
+                          <span className="text-sm">Hourly Rate</span>
                           <Input
                             type="number"
-                            value={hourlyRates[role.id] || 0}
+                            value={hourlyRates[role.id] ?? ''}
                             onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
                             className="mt-1"
                           />
                         </div>
                         <div className="w-32">
-                          <span className="text-sm">Working Hours/Day</span>
+                          <span className="text-sm">Hours/Day</span>
                           <Input
                             type="number"
-                            value={workingHours[role.id] || 8}
+                            value={workingHours[role.id] ?? 8}
                             onChange={(e) => handleWorkingHoursChange(role.id, e.target.value)}
                             className="mt-1"
                             step="0.5"
