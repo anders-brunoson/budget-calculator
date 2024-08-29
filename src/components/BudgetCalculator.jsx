@@ -525,6 +525,18 @@ const BudgetCalculator = () => {
                       <span className="col-span-4 text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
                     </div>
                   ))}
+                  <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
+                    <span className="col-span-4 text-left">Total</span>
+                    <span className="col-span-2 text-right">
+                      {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
+                    </span>
+                    <span className="col-span-2 text-right">
+                      {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
+                    </span>
+                    <span className="col-span-4 text-right">
+                      {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             )}
