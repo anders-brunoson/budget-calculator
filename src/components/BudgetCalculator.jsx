@@ -40,6 +40,7 @@ const BudgetCalculator = () => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [editingMonth, setEditingMonth] = useState(null);
   const editInputRef = useRef(null);
+  const [monthOrder, setMonthOrder] = React.useState([]);  
 
   useEffect(() => {
     initializeState();
@@ -76,6 +77,7 @@ const BudgetCalculator = () => {
     setWorkingDays(initialWorkingDays);
     setWorkingHours(initialWorkingHours);  // Set the initial working hours
     setActiveTab(months[0]);
+    setMonthOrder(months);
   };
 
   useEffect(() => {
@@ -182,6 +184,7 @@ const BudgetCalculator = () => {
     if (newMonthName && !months.includes(newMonthName.toLowerCase())) {
       const monthToAdd = newMonthName.toLowerCase();
       setMonths(prev => [...prev, monthToAdd]);
+      setMonthOrder(prev => [...prev, monthToAdd]);
       setWorkingDays(prev => ({ ...prev, [monthToAdd]: 21 }));
       setCommitments(prev => {
         const newCommitments = { ...prev };
@@ -198,6 +201,7 @@ const BudgetCalculator = () => {
   const handleRemoveMonth = () => {
     if (months.length > 1 && selectedMonths.length > 0) {
       setMonths(prev => prev.filter(month => !selectedMonths.includes(month)));
+      setMonthOrder(prev => prev.filter(month => !selectedMonths.includes(month)));
       setWorkingDays(prev => {
         const newWorkingDays = { ...prev };
         selectedMonths.forEach(month => {
@@ -238,6 +242,7 @@ const BudgetCalculator = () => {
   const handleMonthNameChange = (oldName, newName) => {
     if (newName && newName !== oldName && !months.includes(newName.toLowerCase())) {
       setMonths(prev => prev.map(m => m === oldName ? newName.toLowerCase() : m));
+      setMonthOrder(prev => prev.map(m => m === oldName ? newName.toLowerCase() : m));
       setWorkingDays(prev => {
         const { [oldName]: value, ...rest } = prev;
         return { ...rest, [newName.toLowerCase()]: value };
@@ -550,48 +555,51 @@ const BudgetCalculator = () => {
       )}
       
       <div className="space-y-4 mt-6">
-        {Object.entries(budget).map(([period, { total, breakdown, hours, commitments }]) => (
-          <Card key={period}>
-            <CardHeader className="capitalize">
-              <div className="flex justify-between items-center">
-                <span>{period}</span>
-                <span className="text-2xl font-bold">{total?.toLocaleString()} SEK</span>
-              </div>
-            </CardHeader>
-            {breakdown && hours && commitments && (
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-sm font-medium">
-                    <span className="col-span-4 text-left">Role</span>
-                    <span className="col-span-2 text-right">Commitment</span>
-                    <span className="col-span-2 text-right">Hours</span>
-                    <span className="col-span-4 text-right">Amount</span>
-                  </div>
-                  {roles.map(role => (
-                    <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
-                      <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
-                      <span className="col-span-2 text-right">{commitments[role.id] || 0}%</span>
-                      <span className="col-span-2 text-right">{hours[role.id] || 0}</span>
-                      <span className="col-span-4 text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
-                    </div>
-                  ))}
-                  <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
-                    <span className="col-span-4 text-left">Total</span>
-                    <span className="col-span-2 text-right">
-                      {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
-                    </span>
-                    <span className="col-span-2 text-right">
-                      {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
-                    </span>
-                    <span className="col-span-4 text-right">
-                      {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
-                    </span>
-                  </div>
+        {monthOrder.map((period, index) => {
+          const { total, breakdown, hours, commitments } = budget[period] || {};
+          return (
+            <Card key={index}>
+              <CardHeader className="capitalize">
+                <div className="flex justify-between items-center">
+                  <span>{period}</span>
+                  <span className="text-2xl font-bold">{total?.toLocaleString()} SEK</span>
                 </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
+              </CardHeader>
+              {breakdown && hours && commitments && (
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-2 text-sm font-medium">
+                      <span className="col-span-4 text-left">Role</span>
+                      <span className="col-span-2 text-right">Commitment</span>
+                      <span className="col-span-2 text-right">Hours</span>
+                      <span className="col-span-4 text-right">Amount</span>
+                    </div>
+                    {roles.map(role => (
+                      <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
+                        <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
+                        <span className="col-span-2 text-right">{commitments[role.id] || 0}%</span>
+                        <span className="col-span-2 text-right">{hours[role.id] || 0}</span>
+                        <span className="col-span-4 text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
+                      <span className="col-span-4 text-left">Total</span>
+                      <span className="col-span-2 text-right">
+                        {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
+                      </span>
+                      <span className="col-span-2 text-right">
+                        {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
+                      </span>
+                      <span className="col-span-4 text-right">
+                        {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
 
       <InfoModal />
