@@ -301,24 +301,39 @@ const BudgetCalculator = () => {
   };
 
   const onDragStart = (e, index) => {
-    setDraggedItem(roles[index]);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", e.target.parentNode);
-    e.dataTransfer.setDragImage(e.target.parentNode, 20, 20);
+    if (e.target.closest('.drag-handle')) {
+      e.stopPropagation();
+      setDraggedItem(roles[index]);
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("application/json", JSON.stringify({ type: 'role', index }));
+    }
   };
 
-  const onDragOver = (index) => {
-    const draggedOverItem = roles[index];
+  const onDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
 
-    if (draggedItem === draggedOverItem) {
-      return;
+  const onDrop = (e, index) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData("application/json");
+    if (!data) return; // If there's no valid data, do nothing
+
+    try {
+      const { type, index: draggedIndex } = JSON.parse(data);
+      if (type !== 'role') return; // If it's not our 'role' type, do nothing
+
+      const draggedItem = roles[draggedIndex];
+      if (!draggedItem) return; // If we can't find the dragged item, do nothing
+
+      let newRoles = roles.filter((_, i) => i !== draggedIndex);
+      newRoles.splice(index, 0, draggedItem);
+
+      setRoles(newRoles);
+      setDraggedItem(null);
+    } catch (error) {
+      console.error("Error processing drop:", error);
     }
-
-    let newRoles = roles.filter(role => role !== draggedItem);
-
-    newRoles.splice(index, 0, draggedItem);
-
-    setRoles(newRoles);
   };
 
   const onDragEnd = () => {
@@ -537,14 +552,17 @@ const BudgetCalculator = () => {
                   {roles.map((role, index) => (
                     <div
                       key={role.id}
-                      className="p-4 border rounded-lg relative"
-                      draggable
-                      onDragStart={(e) => onDragStart(e, index)}
-                      onDragOver={() => onDragOver(index)}
-                      onDragEnd={onDragEnd}
+                      className="p-4 border rounded-lg relative role-card"
+                      onDragOver={(e) => onDragOver(e, index)}
+                      onDrop={(e) => onDrop(e, index)}
                     >
                       <div className="flex items-center mb-2">
-                        <div className="mr-2 cursor-move">
+                        <div 
+                          className="mr-2 cursor-move drag-handle"
+                          draggable
+                          onDragStart={(e) => onDragStart(e, index)}
+                          onDragEnd={onDragEnd}
+                        >
                           <GripVertical className="h-5 w-5 text-gray-400" />
                         </div>
                         <Input
@@ -610,7 +628,7 @@ const BudgetCalculator = () => {
       <div className="space-y-4 mt-6">
 
       {/* Total Card */}
-      
+
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
