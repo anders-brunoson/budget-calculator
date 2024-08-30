@@ -229,9 +229,11 @@ const BudgetCalculator = () => {
         prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
       );
     } else {
-      setSelectedMonths([month]);
+      setSelectedMonths(prev => 
+        prev.length === 1 && prev[0] === month ? [] : [month]
+      );
     }
-    setActiveTab(month);
+    setActiveTab(prev => prev === month ? '' : month);
   };
 
   const handleMonthDoubleClick = (month) => {
@@ -291,7 +293,7 @@ const BudgetCalculator = () => {
     } else {
       setActiveTab('');
     }
-  }, [selectedMonths]);  
+  }, [selectedMonths]);
 
   const handleDownloadCSV = () => {
     const csvContent = generateCSV(budget, roles, months, commitments, hourlyRates, workingDays);
@@ -385,6 +387,39 @@ const BudgetCalculator = () => {
       document.body.removeChild(link);
     }
   };
+
+  const calculateTotalSummary = () => {
+    const totalSummary = {
+      total: 0,
+      breakdown: {},
+      hours: {},
+      commitments: {}
+    };
+
+    roles.forEach(role => {
+      totalSummary.breakdown[role.id] = 0;
+      totalSummary.hours[role.id] = 0;
+      totalSummary.commitments[role.id] = 0;
+    });
+
+    monthOrder.forEach(month => {
+      if (budget[month]) {
+        totalSummary.total += budget[month].total || 0;
+        roles.forEach(role => {
+          totalSummary.breakdown[role.id] += budget[month].breakdown[role.id] || 0;
+          totalSummary.hours[role.id] += budget[month].hours[role.id] || 0;
+          totalSummary.commitments[role.id] += budget[month].commitments[role.id] || 0;
+        });
+      }
+    });
+
+    // Average out the commitments
+    roles.forEach(role => {
+      totalSummary.commitments[role.id] = Math.round(totalSummary.commitments[role.id] / monthOrder.length);
+    });
+
+    return totalSummary;
+  };  
 
   return (
     <div className={`p-4 max-w-4xl mx-auto ${darkMode ? 'dark' : ''}`}>
@@ -573,6 +608,53 @@ const BudgetCalculator = () => {
       )}
       
       <div className="space-y-4 mt-6">
+
+      {/* Total Card */}
+      
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <span className="text-xl font-bold">Total Summary</span>
+              <span className="text-2xl font-bold">{calculateTotalSummary().total.toLocaleString()} SEK</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="grid grid-cols-12 gap-2 text-sm font-medium">
+                <span className="col-span-4 text-left">Role</span>
+                <span className="col-span-2 text-right">Avg. Commitment</span>
+                <span className="col-span-2 text-right">Total Hours</span>
+                <span className="col-span-4 text-right">Total Amount</span>
+              </div>
+              {roles.map(role => {
+                const totalSummary = calculateTotalSummary();
+                return (
+                  <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
+                    <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
+                    <span className="col-span-2 text-right">{totalSummary.commitments[role.id] || 0}%</span>
+                    <span className="col-span-2 text-right">{totalSummary.hours[role.id] || 0}</span>
+                    <span className="col-span-4 text-right">{(totalSummary.breakdown[role.id] || 0).toLocaleString()} SEK</span>
+                  </div>
+                );
+              })}
+              <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
+                <span className="col-span-4 text-left">Grand Total</span>
+                <span className="col-span-2 text-right">
+                  {Object.values(calculateTotalSummary().commitments).reduce((sum, value) => sum + (value || 0), 0)}%
+                </span>
+                <span className="col-span-2 text-right">
+                  {Object.values(calculateTotalSummary().hours).reduce((sum, value) => sum + (value || 0), 0)}
+                </span>
+                <span className="col-span-4 text-right">
+                  {calculateTotalSummary().total.toLocaleString()} SEK
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Month Cards */}
+
         {monthOrder.map((period, index) => {
           const { total, breakdown, hours, commitments } = budget[period] || {};
           return (
