@@ -229,33 +229,51 @@ const BudgetCalculator = () => {
         prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
       );
     } else {
-      setSelectedMonths(prev => 
-        prev.length === 1 && prev[0] === month ? [] : [month]
-      );
+      setSelectedMonths([month]);
     }
+    setActiveTab(month);
   };
 
   const handleMonthDoubleClick = (month) => {
     setEditingMonth(month);
+    // Use setTimeout to ensure the input is rendered before trying to focus and select
+    setTimeout(() => {
+      if (editInputRef.current) {
+        editInputRef.current.focus();
+        editInputRef.current.select();
+      }
+    }, 0);
   };
-
+  
   const handleMonthNameChange = (oldName, newName) => {
     if (newName && newName !== oldName && !months.includes(newName.toLowerCase())) {
-      setMonths(prev => prev.map(m => m === oldName ? newName.toLowerCase() : m));
-      setMonthOrder(prev => prev.map(m => m === oldName ? newName.toLowerCase() : m));
+      const lowerNewName = newName.toLowerCase();
+      setMonths(prev => prev.map(m => m === oldName ? lowerNewName : m));
+      setMonthOrder(prev => prev.map(m => m === oldName ? lowerNewName : m));
       setWorkingDays(prev => {
         const { [oldName]: value, ...rest } = prev;
-        return { ...rest, [newName.toLowerCase()]: value };
+        return { ...rest, [lowerNewName]: value };
       });
       setCommitments(prev => {
         const newCommitments = { ...prev };
         Object.keys(newCommitments).forEach(roleId => {
           const { [oldName]: value, ...rest } = newCommitments[roleId];
-          newCommitments[roleId] = { ...rest, [newName.toLowerCase()]: value };
+          newCommitments[roleId] = { ...rest, [lowerNewName]: value };
         });
         return newCommitments;
       });
       setEditingMonth(null);
+      
+      // Set the active tab to the newly renamed month
+      setActiveTab(lowerNewName);
+      
+      // Update selected months if the renamed month was selected
+      setSelectedMonths(prev => prev.map(m => m === oldName ? lowerNewName : m));
+
+      // Force a re-render to ensure the tab becomes active
+      setTimeout(() => {
+        setActiveTab(lowerNewName);
+      }, 0);
     } else {
       setEditingMonth(null);
     }
