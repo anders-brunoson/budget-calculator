@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import CSVUpload from './CSVUpload';
 
 const BudgetCalculator = () => {
   const [months, setMonths] = useState(['jan', 'feb', 'mar',`apr`,'may', 'jun', 'jul',`aug`,'sep', 'oct', 'nov',`dec`]);
@@ -40,7 +41,19 @@ const BudgetCalculator = () => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [editingMonth, setEditingMonth] = useState(null);
   const editInputRef = useRef(null);
-  const [monthOrder, setMonthOrder] = React.useState([]);  
+  const [monthOrder, setMonthOrder] = React.useState([]);
+
+  const handleDataUploaded = (data) => {
+    setMonths(data.months);
+    setRoles(data.roles);
+    setCommitments(data.commitments);
+    setHourlyRates(data.hourlyRates);
+    setWorkingHours(data.workingHours);
+    setWorkingDays(data.workingDays);
+    setMonthOrder(data.months);
+    setActiveTab(data.months[0]);
+    setSelectedMonths([]);
+  };  
 
   useEffect(() => {
     initializeState();
@@ -363,7 +376,8 @@ const BudgetCalculator = () => {
           <li>Drag and drop roles to reorder them.</li>
           <li>Use the dark mode toggle for different viewing options.</li>
           <li>View the calculated budget breakdown for each month and the total.</li>
-          <li>Download budget data as CSV to use with Excel.</li>
+          <li>Download budget data as CSV to use with Excel or to store it.</li>
+          <li>Upload budget data as CSV (use same format as downloaded CSV).</li>
         </ol>
       </DialogDescription>
     </DialogContent>
@@ -477,6 +491,7 @@ const BudgetCalculator = () => {
         <Button onClick={handleDownloadCSV} className="flex items-center">
           <Download className="mr-2 h-4 w-4" /> Download CSV
         </Button>
+        <CSVUpload onDataUploaded={handleDataUploaded} />
       </div>
 
       {isAddingMonth && (
