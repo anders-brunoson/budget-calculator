@@ -422,13 +422,15 @@ const BudgetCalculator = () => {
       total: 0,
       breakdown: {},
       hours: {},
-      commitments: {}
+      commitments: {},
+      hourlyRates: {} // Add this line
     };
 
     roles.forEach(role => {
       totalSummary.breakdown[role.id] = 0;
       totalSummary.hours[role.id] = 0;
       totalSummary.commitments[role.id] = 0;
+      totalSummary.hourlyRates[role.id] = hourlyRates[role.id] || 0; // Add this line
     });
 
     monthOrder.forEach(month => {
@@ -448,6 +450,12 @@ const BudgetCalculator = () => {
     });
 
     return totalSummary;
+  };
+
+  const calculateAverageHourlyRate = (totalSummary) => {
+    const totalHours = Object.values(totalSummary.hours).reduce((sum, hours) => sum + hours, 0);
+    const totalAmount = Object.values(totalSummary.breakdown).reduce((sum, amount) => sum + amount, 0);
+    return totalHours > 0 ? Math.round(totalAmount / totalHours) : 0;
   };  
 
   return (
@@ -641,9 +649,7 @@ const BudgetCalculator = () => {
       )}
       
       <div className="space-y-4 mt-6">
-
-      {/* Total Card */}
-
+        {/* Total Card */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -653,32 +659,37 @@ const BudgetCalculator = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium">
-                <span className="col-span-4 text-left">Role</span>
-                <span className="col-span-2 text-right">Avg. Commitment</span>
-                <span className="col-span-2 text-right">Total Hours</span>
-                <span className="col-span-4 text-right">Total Amount</span>
+              <div className="flex text-sm font-medium">
+                <span className="w-[28%] text-left">Role</span>
+                <span className="w-[18%] text-right">Avg. Commitment</span>
+                <span className="w-[18%] text-right">Total Hours</span>
+                <span className="w-[18%] text-right">Hourly Rate</span>
+                <span className="w-[18%] text-right">Total Amount</span>
               </div>
               {roles.map(role => {
                 const totalSummary = calculateTotalSummary();
                 return (
-                  <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
-                    <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
-                    <span className="col-span-2 text-right">{totalSummary.commitments[role.id] || 0}%</span>
-                    <span className="col-span-2 text-right">{totalSummary.hours[role.id] || 0}</span>
-                    <span className="col-span-4 text-right">{(totalSummary.breakdown[role.id] || 0).toLocaleString()} SEK</span>
+                  <div key={role.id} className="flex text-sm">
+                    <span className="w-[28%] text-left truncate" title={role.name}>{role.name}</span>
+                    <span className="w-[18%] text-right">{totalSummary.commitments[role.id] || 0}%</span>
+                    <span className="w-[18%] text-right">{totalSummary.hours[role.id] || 0}</span>
+                    <span className="w-[18%] text-right">{totalSummary.hourlyRates[role.id] || 0} SEK</span>
+                    <span className="w-[18%] text-right">{(totalSummary.breakdown[role.id] || 0).toLocaleString()} SEK</span>
                   </div>
                 );
               })}
-              <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
-                <span className="col-span-4 text-left">Grand Total</span>
-                <span className="col-span-2 text-right">
+              <div className="flex text-sm font-bold pt-2 border-t">
+                <span className="w-[28%] text-left">Grand Total</span>
+                <span className="w-[18%] text-right">
                   {Object.values(calculateTotalSummary().commitments).reduce((sum, value) => sum + (value || 0), 0)}%
                 </span>
-                <span className="col-span-2 text-right">
+                <span className="w-[18%] text-right">
                   {Object.values(calculateTotalSummary().hours).reduce((sum, value) => sum + (value || 0), 0)}
                 </span>
-                <span className="col-span-4 text-right">
+                <span className="w-[18%] text-right">
+                  {calculateAverageHourlyRate(calculateTotalSummary())} SEK
+                </span>
+                <span className="w-[18%] text-right">
                   {calculateTotalSummary().total.toLocaleString()} SEK
                 </span>
               </div>
@@ -687,7 +698,6 @@ const BudgetCalculator = () => {
         </Card>
 
         {/* Month Cards */}
-
         {monthOrder.map((period, index) => {
           const { total, breakdown, hours, commitments } = budget[period] || {};
           return (
@@ -701,29 +711,34 @@ const BudgetCalculator = () => {
               {breakdown && hours && commitments && (
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-2 text-sm font-medium">
-                      <span className="col-span-4 text-left">Role</span>
-                      <span className="col-span-2 text-right">Commitment</span>
-                      <span className="col-span-2 text-right">Hours</span>
-                      <span className="col-span-4 text-right">Amount</span>
+                    <div className="flex text-sm font-medium">
+                      <span className="w-[28%] text-left">Role</span>
+                      <span className="w-[18%] text-right">Commitment</span>
+                      <span className="w-[18%] text-right">Hours</span>
+                      <span className="w-[18%] text-right">Hourly Rate</span>
+                      <span className="w-[18%] text-right">Amount</span>
                     </div>
                     {roles.map(role => (
-                      <div key={role.id} className="grid grid-cols-12 gap-2 text-sm">
-                        <span className="col-span-4 text-left truncate" title={role.name}>{role.name}</span>
-                        <span className="col-span-2 text-right">{commitments[role.id] || 0}%</span>
-                        <span className="col-span-2 text-right">{hours[role.id] || 0}</span>
-                        <span className="col-span-4 text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
+                      <div key={role.id} className="flex text-sm">
+                        <span className="w-[28%] text-left truncate" title={role.name}>{role.name}</span>
+                        <span className="w-[18%] text-right">{commitments[role.id] || 0}%</span>
+                        <span className="w-[18%] text-right">{hours[role.id] || 0}</span>
+                        <span className="w-[18%] text-right">{hourlyRates[role.id] || 0} SEK</span>
+                        <span className="w-[18%] text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
                       </div>
                     ))}
-                    <div className="grid grid-cols-12 gap-2 text-sm font-bold pt-2 border-t">
-                      <span className="col-span-4 text-left">Total</span>
-                      <span className="col-span-2 text-right">
+                    <div className="flex text-sm font-bold pt-2 border-t">
+                      <span className="w-[28%] text-left">Total</span>
+                      <span className="w-[18%] text-right">
                         {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
                       </span>
-                      <span className="col-span-2 text-right">
+                      <span className="w-[18%] text-right">
                         {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
                       </span>
-                      <span className="col-span-4 text-right">
+                      <span className="w-[18%] text-right">
+                        {calculateAverageHourlyRate({ hours, breakdown })} SEK
+                      </span>
+                      <span className="w-[18%] text-right">
                         {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
                       </span>
                     </div>
