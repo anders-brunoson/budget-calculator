@@ -238,16 +238,28 @@ const BudgetCalculator = () => {
 
   const handleMonthSelect = (month, event) => {
     if (event.ctrlKey || event.metaKey) {
-      setSelectedMonths(prev => 
-        prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
-      );
+      setSelectedMonths(prev => {
+        const newSelection = prev.includes(month)
+          ? prev.filter(m => m !== month)
+          : [...prev, month];
+        return newSelection.length === 0 ? months : newSelection;
+      });
     } else {
       setSelectedMonths(prev => 
-        prev.length === 1 && prev[0] === month ? [] : [month]
+        prev.length === 1 && prev[0] === month ? months : [month]
       );
     }
-    setActiveTab(prev => prev === month ? '' : month);
+    setActiveTab(month);
   };
+
+  useEffect(() => {
+    if (selectedMonths.length === 0) {
+      setSelectedMonths(months);
+    }
+    if (selectedMonths.length > 0 && !activeTab) {
+      setActiveTab(selectedMonths[0]);
+    }
+  }, [selectedMonths, months, activeTab]);
 
   const handleMonthDoubleClick = (month) => {
     setEditingMonth(month);
@@ -644,9 +656,9 @@ const BudgetCalculator = () => {
             )}
           </Tabs>
 
-          {selectedMonths.length === 0 && (
+          {selectedMonths.length === months.length && (
             <div className="mt-8 text-center text-gray-500">
-              <p>Please select a month to view and edit budget details.</p>
+              <p>All months are currently selected. Deselect individual months by Ctrl/Cmd + click.</p>
             </div>
           )}
         </div>
