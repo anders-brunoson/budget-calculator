@@ -459,9 +459,9 @@ const BudgetCalculator = () => {
   };  
 
   return (
-    <div className={`p-4 max-w-4xl mx-auto ${darkMode ? 'dark' : ''}`}>
+    <div className={`p-4 w-full ${darkMode ? 'dark' : ''}`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Monthly Budget Calculator</h1>
+        <h1 className="text-3xl font-bold">Monthly Budget Calculator</h1>
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
@@ -514,240 +514,242 @@ const BudgetCalculator = () => {
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-6 bg-gray-100 p-1 rounded-lg flex flex-wrap min-h-fit">
-          <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
-            {months.map(month => (
-              <TabsTrigger 
-                key={month} 
-                value={month} 
-                onClick={(e) => handleMonthSelect(month, e)}
-                onDoubleClick={() => handleMonthDoubleClick(month)}
-                className={`px-1 py-1 border-b-2 ${
-                  selectedMonths.includes(month) 
-                    ? 'border-blue-500 bg-blue-100' 
-                    : 'border-transparent hover:border-gray-300'
-                } focus:outline-none`}
-              >
-                {editingMonth === month ? (
-                  <Input
-                    ref={editInputRef}
-                    defaultValue={capitalize(month)}
-                    onBlur={(e) => handleMonthNameChange(month, e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleMonthNameChange(month, e.target.value);
-                      }
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-20 p-0 h-6 text-center"
-                  />
-                ) : (
-                  capitalize(month)
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-        <div className="mt-4 text-left">
-          <h3 className="font-semibold">Selected Month(s):</h3>
-          <p>{selectedMonths.map(capitalize).join(', ') || 'None'}</p>
-        </div>
+      <div className="flex flex-col xl:flex-row gap-6">
+        <div className="xl:w-1/2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="mb-6 bg-gray-100 p-1 rounded-lg flex flex-wrap min-h-fit">
+              <TabsList className="w-full flex flex-wrap justify-start bg-transparent">
+                {months.map(month => (
+                  <TabsTrigger 
+                    key={month} 
+                    value={month} 
+                    onClick={(e) => handleMonthSelect(month, e)}
+                    onDoubleClick={() => handleMonthDoubleClick(month)}
+                    className={`px-1 py-1 border-b-2 ${
+                      selectedMonths.includes(month) 
+                        ? 'border-blue-500 bg-blue-100' 
+                        : 'border-transparent hover:border-gray-300'
+                    } focus:outline-none`}
+                  >
+                    {editingMonth === month ? (
+                      <Input
+                        ref={editInputRef}
+                        defaultValue={capitalize(month)}
+                        onBlur={(e) => handleMonthNameChange(month, e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleMonthNameChange(month, e.target.value);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-20 p-0 h-6 text-center"
+                      />
+                    ) : (
+                      capitalize(month)
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+            <div className="mt-4 text-left">
+              <h3 className="font-semibold">Selected Month(s):</h3>
+              <p>{selectedMonths.map(capitalize).join(', ') || 'None'}</p>
+            </div>
 
-        {selectedMonths.length > 0 && (
-          <>
-            {months.map(month => (
-              <TabsContent key={month} value={month}>
-                <div className="mt-8 mb-8 flex justify-between items-center">
-                  <label className="block text-sm font-medium">
-                    Working days in {capitalize(month)} (CHECK MANUALLY!):
-                    <Input
-                      type="number"
-                      value={workingDays[month] ?? ''}
-                      onChange={(e) => handleWorkingDaysChange(month, e.target.value)}
-                      className="mt-1 block w-full"
-                      min="0"
-                      max="31"
-                    />
-                  </label>
-                </div>
-                <div className="space-y-4 mb-6">
-                  {roles.map((role, index) => (
-                    <div
-                      key={role.id}
-                      className="p-4 border rounded-lg relative role-card"
-                      onDragOver={(e) => onDragOver(e, index)}
-                      onDrop={(e) => onDrop(e, index)}
-                    >
-                      <div className="flex items-center mb-2">
-                        <div 
-                          className="mr-2 cursor-move drag-handle"
-                          draggable
-                          onDragStart={(e) => onDragStart(e, index)}
-                          onDragEnd={onDragEnd}
-                        >
-                          <GripVertical className="h-5 w-5 text-gray-400" />
-                        </div>
+            {selectedMonths.length > 0 && (
+              <>
+                {months.map(month => (
+                  <TabsContent key={month} value={month}>
+                    <div className="mt-8 mb-8 flex justify-between items-center">
+                      <label className="block text-sm font-medium">
+                        Working days in {capitalize(month)} (CHECK MANUALLY!):
                         <Input
-                          value={role.name}
-                          onChange={(e) => setRoles(prev => prev.map(r => r.id === role.id ? { ...r, name: e.target.value } : r))}
-                          className="font-medium flex-grow"
+                          type="number"
+                          value={workingDays[month] ?? ''}
+                          onChange={(e) => handleWorkingDaysChange(month, e.target.value)}
+                          className="mt-1 block w-full"
+                          min="0"
+                          max="31"
                         />
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="ml-2" 
-                          onClick={() => handleRemoveRole(role.id)}
+                      </label>
+                    </div>
+                    <div className="space-y-4 mb-6">
+                      {roles.map((role, index) => (
+                        <div
+                          key={role.id}
+                          className="p-4 border rounded-lg relative role-card"
+                          onDragOver={(e) => onDragOver(e, index)}
+                          onDrop={(e) => onDrop(e, index)}
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <div className="text-left flex-grow">
-                          <span className="text-sm">Commitment: {commitments[role.id]?.[month] || 0}%</span>
-                          <Slider
-                            value={[commitments[role.id]?.[month] || 0]}
-                            max={100}
-                            step={1}
-                            onValueChange={(val) => handleCommitmentChange(role.id, month, val)}
-                          />
+                          <div className="flex items-center mb-2">
+                            <div 
+                              className="mr-2 cursor-move drag-handle"
+                              draggable
+                              onDragStart={(e) => onDragStart(e, index)}
+                              onDragEnd={onDragEnd}
+                            >
+                              <GripVertical className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <Input
+                              value={role.name}
+                              onChange={(e) => setRoles(prev => prev.map(r => r.id === role.id ? { ...r, name: e.target.value } : r))}
+                              className="font-medium flex-grow"
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="ml-2" 
+                              onClick={() => handleRemoveRole(role.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 mt-2">
+                            <div className="flex-grow min-w-[200px]">
+                              <span className="text-sm">Commitment: {commitments[role.id]?.[month] || 0}%</span>
+                              <Slider
+                                value={[commitments[role.id]?.[month] || 0]}
+                                max={100}
+                                step={1}
+                                onValueChange={(val) => handleCommitmentChange(role.id, month, val)}
+                              />
+                            </div>
+                            <div className="w-32">
+                              <span className="text-sm">Hourly Rate</span>
+                              <Input
+                                type="number"
+                                value={hourlyRates[role.id] ?? ''}
+                                onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div className="w-32">
+                              <span className="text-sm">Hours/Day</span>
+                              <Input
+                                type="number"
+                                value={workingHours[role.id] ?? 8}
+                                onChange={(e) => handleWorkingHoursChange(role.id, e.target.value)}
+                                className="mt-1"
+                                step="0.5"
+                                min="0"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="w-32">
-                          <span className="text-sm">Hourly Rate</span>
-                          <Input
-                            type="number"
-                            value={hourlyRates[role.id] ?? ''}
-                            onChange={(e) => handleHourlyRateChange(role.id, e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div className="w-32">
-                          <span className="text-sm">Hours/Day</span>
-                          <Input
-                            type="number"
-                            value={workingHours[role.id] ?? 8}
-                            onChange={(e) => handleWorkingHoursChange(role.id, e.target.value)}
-                            className="mt-1"
-                            step="0.5"
-                            min="0"
-                          />
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </>
-        )}
-      </Tabs>
+                  </TabsContent>
+                ))}
+              </>
+            )}
+          </Tabs>
 
-      {selectedMonths.length === 0 && (
-        <div className="mt-8 text-center text-gray-500">
-          <p>Please select a month to view and edit budget details.</p>
+          {selectedMonths.length === 0 && (
+            <div className="mt-8 text-center text-gray-500">
+              <p>Please select a month to view and edit budget details.</p>
+            </div>
+          )}
         </div>
-      )}
-      
-      <div className="space-y-4 mt-6">
-        {/* Total Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-bold">Total Summary</span>
-              <span className="text-2xl font-bold">{calculateTotalSummary().total.toLocaleString()} SEK</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex text-sm font-medium">
-                <span className="w-[28%] text-left">Role</span>
-                <span className="w-[18%] text-right">Avg. Commitment</span>
-                <span className="w-[18%] text-right">Total Hours</span>
-                <span className="w-[18%] text-right">Hourly Rate</span>
-                <span className="w-[18%] text-right">Total Amount</span>
-              </div>
-              {roles.map(role => {
-                const totalSummary = calculateTotalSummary();
-                return (
-                  <div key={role.id} className="flex text-sm">
-                    <span className="w-[28%] text-left truncate" title={role.name}>{role.name}</span>
-                    <span className="w-[18%] text-right">{totalSummary.commitments[role.id] || 0}%</span>
-                    <span className="w-[18%] text-right">{totalSummary.hours[role.id] || 0}</span>
-                    <span className="w-[18%] text-right">{totalSummary.hourlyRates[role.id] || 0} SEK</span>
-                    <span className="w-[18%] text-right">{(totalSummary.breakdown[role.id] || 0).toLocaleString()} SEK</span>
-                  </div>
-                );
-              })}
-              <div className="flex text-sm font-bold pt-2 border-t">
-                <span className="w-[28%] text-left">Grand Total</span>
-                <span className="w-[18%] text-right">
-                  {Object.values(calculateTotalSummary().commitments).reduce((sum, value) => sum + (value || 0), 0)}%
-                </span>
-                <span className="w-[18%] text-right">
-                  {Object.values(calculateTotalSummary().hours).reduce((sum, value) => sum + (value || 0), 0)}
-                </span>
-                <span className="w-[18%] text-right">
-                  {calculateAverageHourlyRate(calculateTotalSummary())} SEK
-                </span>
-                <span className="w-[18%] text-right">
-                  {calculateTotalSummary().total.toLocaleString()} SEK
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Month Cards */}
-        {monthOrder.map((period, index) => {
-          const { total, breakdown, hours, commitments } = budget[period] || {};
-          return (
-            <Card key={index}>
-              <CardHeader className="capitalize">
-                <div className="flex justify-between items-center">
-                  <span>{period}</span>
-                  <span className="text-2xl font-bold">{total?.toLocaleString()} SEK</span>
+        <div className="xl:w-1/2 space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <span className="text-xl font-bold">Total Summary</span>
+                <span className="text-2xl font-bold">{calculateTotalSummary().total.toLocaleString()} SEK</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-5 font-medium">
+                  <span className="col-span-1 text-left">Role</span>
+                  <span className="text-right">Avg. Commitment</span>
+                  <span className="text-right">Total Hours</span>
+                  <span className="text-right">Hourly Rate</span>
+                  <span className="text-right">Total Amount</span>
                 </div>
-              </CardHeader>
-              {breakdown && hours && commitments && (
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex text-sm font-medium">
-                      <span className="w-[28%] text-left">Role</span>
-                      <span className="w-[18%] text-right">Commitment</span>
-                      <span className="w-[18%] text-right">Hours</span>
-                      <span className="w-[18%] text-right">Hourly Rate</span>
-                      <span className="w-[18%] text-right">Amount</span>
+                {roles.map(role => {
+                  const totalSummary = calculateTotalSummary();
+                  return (
+                    <div key={role.id} className="grid grid-cols-5">
+                      <span className="col-span-1 truncate text-left" title={role.name}>{role.name}</span>
+                      <span className="text-right">{totalSummary.commitments[role.id] || 0}%</span>
+                      <span className="text-right">{totalSummary.hours[role.id] || 0}</span>
+                      <span className="text-right">{totalSummary.hourlyRates[role.id] || 0} SEK</span>
+                      <span className="text-right">{(totalSummary.breakdown[role.id] || 0).toLocaleString()} SEK</span>
                     </div>
-                    {roles.map(role => (
-                      <div key={role.id} className="flex text-sm">
-                        <span className="w-[28%] text-left truncate" title={role.name}>{role.name}</span>
-                        <span className="w-[18%] text-right">{commitments[role.id] || 0}%</span>
-                        <span className="w-[18%] text-right">{hours[role.id] || 0}</span>
-                        <span className="w-[18%] text-right">{hourlyRates[role.id] || 0} SEK</span>
-                        <span className="w-[18%] text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
-                      </div>
-                    ))}
-                    <div className="flex text-sm font-bold pt-2 border-t">
-                      <span className="w-[28%] text-left">Total</span>
-                      <span className="w-[18%] text-right">
-                        {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
-                      </span>
-                      <span className="w-[18%] text-right">
-                        {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
-                      </span>
-                      <span className="w-[18%] text-right">
-                        {calculateAverageHourlyRate({ hours, breakdown })} SEK
-                      </span>
-                      <span className="w-[18%] text-right">
-                        {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
-                      </span>
-                    </div>
+                  );
+                })}
+                <div className="grid grid-cols-5 font-bold pt-2 border-t">
+                  <span className="col-span-1 text-left">Grand Total</span>
+                  <span className="text-right">
+                    {Object.values(calculateTotalSummary().commitments).reduce((sum, value) => sum + (value || 0), 0)}%
+                  </span>
+                  <span className="text-right">
+                    {Object.values(calculateTotalSummary().hours).reduce((sum, value) => sum + (value || 0), 0)}
+                  </span>
+                  <span className="text-right">
+                    {calculateAverageHourlyRate(calculateTotalSummary())} SEK
+                  </span>
+                  <span className="text-right">
+                    {calculateTotalSummary().total.toLocaleString()} SEK
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {monthOrder.map((period, index) => {
+            const { total, breakdown, hours, commitments } = budget[period] || {};
+            return (
+              <Card key={index}>
+                <CardHeader className="capitalize">
+                  <div className="flex justify-between items-center">
+                    <span>{period}</span>
+                    <span className="text-2xl font-bold">{total?.toLocaleString()} SEK</span>
                   </div>
-                </CardContent>
-              )}
-            </Card>
-          );
-        })}
+                </CardHeader>
+                {breakdown && hours && commitments && (
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <div className="grid grid-cols-5 font-medium">
+                        <span className="col-span-1 text-left">Role</span>
+                        <span className="text-right">Commitment</span>
+                        <span className="text-right">Hours</span>
+                        <span className="text-right">Hourly Rate</span>
+                        <span className="text-right">Amount</span>
+                      </div>
+                      {roles.map(role => (
+                        <div key={role.id} className="grid grid-cols-5">
+                          <span className="col-span-1 truncate text-left" title={role.name}>{role.name}</span>
+                          <span className="text-right">{commitments[role.id] || 0}%</span>
+                          <span className="text-right">{hours[role.id] || 0}</span>
+                          <span className="text-right">{hourlyRates[role.id] || 0} SEK</span>
+                          <span className="text-right">{(breakdown[role.id] || 0).toLocaleString()} SEK</span>
+                        </div>
+                      ))}
+                      <div className="grid grid-cols-5 font-bold pt-2 border-t">
+                        <span className="col-span-1 text-left">Total</span>
+                        <span className="text-right">
+                          {Object.values(commitments).reduce((sum, value) => sum + (value || 0), 0)}%
+                        </span>
+                        <span className="text-right">
+                          {Object.values(hours).reduce((sum, value) => sum + (value || 0), 0)}
+                        </span>
+                        <span className="text-right">
+                          {calculateAverageHourlyRate({ hours, breakdown })} SEK
+                        </span>
+                        <span className="text-right">
+                          {Object.values(breakdown).reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} SEK
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       <InfoModal />
